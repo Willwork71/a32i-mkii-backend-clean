@@ -1,17 +1,12 @@
-from flask import Flask, request, jsonify
-from flask_cors import CORS
+import os
+from flask import Flask
 
 app = Flask(__name__)
-CORS(app)
 
-@app.route("/generate", methods=["POST"])
-def generate_report():
-    data = request.get_json()
-    country = data.get("country", "Unknown")
-
-    # Placeholder content for the report
-    report_html = f"<h2>Report for {country}</h2><p>This is a dynamically generated A32i MKII sustainability report.</p>"
-    return jsonify({ "report": report_html })
+@app.route("/")
+def home():
+    return "A32i MKII is live!"
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
