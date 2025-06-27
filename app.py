@@ -1,48 +1,36 @@
-from flask import Flask
-from dash import Dash, html, dcc, Input, Output
+from flask import Flask, request, jsonify
+from dash import Dash, dcc, html, Input, Output
 import plotly.express as px
 import pandas as pd
 
-# Sample data for demonstration
-df = pd.DataFrame({
-    "country": ["Rwanda", "Mauritius", "Malta", "Ghana", "Saint Kitts"],
-    "Carbon Emissions": [100, 150, 130, 180, 120],
-    "Renewable Energy %": [60, 75, 70, 50, 65]
-})
+# Sample placeholder data structure for demonstration
+def generate_country_data(country):
+    # Replace this with real logic or database/API lookup
+    carbon = hash(country) % 100 + 100
+    renewable = 100 - (hash(country[::-1]) % 60)
+    return pd.DataFrame({
+        "Metric": ["Carbon Emissions", "Renewable Energy"],
+        "Value": [carbon, renewable]
+    })
 
-# Flask server
 server = Flask(__name__)
-
-# Dash app
 app = Dash(__name__, server=server, url_base_pathname='/')
 
 app.layout = html.Div([
     html.H2("A32i MKII – Country Sustainability Dashboard"),
-    dcc.Dropdown(
-        id='country-dropdown',
-        options=[{'label': c, 'value': c} for c in df['country']],
-        placeholder="Select a country"
-    ),
+    dcc.Input(id='country-input', type='text', placeholder='Enter a country'),
     dcc.Graph(id='country-graph')
 ])
 
 @app.callback(
     Output('country-graph', 'figure'),
-    Input('country-dropdown', 'value')
+    Input('country-input', 'value')
 )
-def update_graph(selected_country):
-    if not selected_country:
-        return px.line(title="Select a country to view data.")
+def update_graph(country):
+    if not country:
+        return px.line(title="Enter a country name to view data.")
+    df = generate_country_data(country)
+    return px.bar(df, x='Metric', y='Value', title=f"Sustainability Snapshot: {country}")
 
-    country_data = df[df['country'] == selected_country]
-    chart_df = country_data.melt(id_vars=["country"], 
-                                 value_vars=["Carbon Emissions", "Renewable Energy %"],
-                                 var_name="variable", value_name="value")
-    
-    fig = px.bar(chart_df, x="variable", y="value", color="variable",
-                 title=f"Sustainability Indicators for {selected_country}")
-    fig.update_layout(transition_duration=500)
-    return fig
-
-if __name__ == "__main__":
+if __name__ == '__main__':
     app.run(debug=True)
