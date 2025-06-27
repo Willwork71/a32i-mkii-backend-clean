@@ -1,36 +1,31 @@
 from flask import Flask, request, jsonify
-from dash import Dash, dcc, html, Input, Output
-import plotly.express as px
-import pandas as pd
+import markdown
 
-# Sample placeholder data structure for demonstration
-def generate_country_data(country):
-    # Replace this with real logic or database/API lookup
-    carbon = hash(country) % 100 + 100
-    renewable = 100 - (hash(country[::-1]) % 60)
-    return pd.DataFrame({
-        "Metric": ["Carbon Emissions", "Renewable Energy"],
-        "Value": [carbon, renewable]
-    })
+app = Flask(__name__)
 
-server = Flask(__name__)
-app = Dash(__name__, server=server, url_base_pathname='/')
+# Replace this with your actual MKII report generator
+def run_a32i_mkii(country):
+    # Example placeholder logic — swap this with your real MKII logic
+    report = f"""
+    <h2>A32i MKII Sustainability Report for {country}</h2>
+    <p>This is a placeholder report. Replace this section with the full HTML output from your MKII engine.</p>
+    <ul>
+      <li><strong>Country:</strong> {country}</li>
+      <li><strong>Status:</strong> In Progress</li>
+    </ul>
+    """
+    return report
 
-app.layout = html.Div([
-    html.H2("A32i MKII – Country Sustainability Dashboard"),
-    dcc.Input(id='country-input', type='text', placeholder='Enter a country'),
-    dcc.Graph(id='country-graph')
-])
+@app.route("/")
+def index():
+    return "<h1>A32i MKII Backend Running</h1>"
 
-@app.callback(
-    Output('country-graph', 'figure'),
-    Input('country-input', 'value')
-)
-def update_graph(country):
-    if not country:
-        return px.line(title="Enter a country name to view data.")
-    df = generate_country_data(country)
-    return px.bar(df, x='Metric', y='Value', title=f"Sustainability Snapshot: {country}")
+@app.route("/generate", methods=["POST"])
+def generate_report():
+    data = request.get_json()
+    country = data.get("country", "Unknown")
+    report_html = run_a32i_mkii(country)
+    return jsonify({ "report": report_html })
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run(debug=True)
